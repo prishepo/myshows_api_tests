@@ -25,28 +25,50 @@ def api_session():
 
 
 @pytest.fixture()
-def create_and_del_series():
+def create_one_series():
     conn = psycopg.connect(**conn_params, row_factory=dict_row)
     try:
         with allure.step("Добавление сериалов в БД"):
-            data = [('Дикий ангел', 'https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/1898899/20df477e-8a1c-4cf3-8518-7873e196ab60/300x450', 1,
-                     'will_watch', None),
-                    ('Время приключений', 'https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/1704946/8997def3-7896-48c4-85db-b600eca3f983/300x450', 1,
-                     'watching', None),
-                    ('Джентльмены', 'https://cdnrrviubnyuntopbez5.svc.cdn.yandex.net/get-kinopoisk-image/10812607/b63d7300-204d-42a9-a3f8-49c02c462011/300x450', 1,
-                     'watching', None)]
             with conn.cursor() as cur:
-                added_series_result = load_sql(cur, "data/my_show_INSERT.sql", data)
+                added_series_result = load_sql(cur, "data/my_show_INSERT_1_series.sql")
                 conn.commit()
-        yield added_series_result
-        with allure.step("Удаленые добавленных сериалов из БД"):
-            list_of_ids = [x['id'] for x in added_series_result]
+        yield added_series_result,conn
+        with allure.step("Удаленые добавленного сериала из БД"):
+            id = added_series_result[0]['id']
             with conn.cursor() as cur:
                 cur.execute("""DELETE FROM public.series
-                                 WHERE id IN (%s, %s, %s)""", (list_of_ids[0],list_of_ids[1],list_of_ids[2]))
+                                 WHERE id=%s""", (id,))
                 conn.commit()
     finally:
         conn.close()
+
+@pytest.fixture()
+def create_and_del_series(request):
+    if hasattr(request, "param"):
+        sql_file_path = request.param
+    else:
+        sql_file_path = "data/my_show_INSERT.sql"
+
+    conn = psycopg.connect(**conn_params, row_factory=dict_row)
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""DELETE FROM public.series""")
+            conn.commit()
+        if not sql_file_path:
+            yield 0
+        else:
+            with allure.step("Добавление сериалов в БД"):
+                with conn.cursor() as cur:
+                    added_series_result = load_sql(cur, sql_file_path)
+                    conn.commit()
+            yield len(added_series_result)
+        with allure.step("Очистка БД"):
+            with conn.cursor() as cur:
+                cur.execute("""DELETE FROM public.series""")
+                conn.commit()
+    finally:
+        conn.close()
+
 
 
 

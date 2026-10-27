@@ -1,13 +1,16 @@
-def load_sql(cursor, file_path, params):
+import yaml
+from pathlib import Path
+
+
+def load_sql(cursor, file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         sql_query = file.read()
+    cursor.execute(sql_query)
+    result = cursor.fetchall()
+    return result
 
-    created_ids_and_names = []
 
-    # Для каждой записи выполняем запрос отдельно
-    for data_tuple in params:
-        cursor.execute(sql_query, data_tuple)
-        result = cursor.fetchone()
-        created_ids_and_names.append(result)
-
-    return created_ids_and_names
+def load_yaml(filename: str) -> dict:
+    path = Path(__file__).parent.parent / "data" / filename
+    with path.open(mode="r", encoding="utf-8") as file:
+        return yaml.safe_load(file)
