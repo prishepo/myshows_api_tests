@@ -10,7 +10,7 @@ from jsonschema import validate
 
 @allure.suite("Тесты на эндпоинт /series")
 class TestGetSeries:
-    @pytest.mark.series_tests
+    @pytest.mark.api
     @allure.title("Обновление информации о сериале: успешный сценарий")
     @pytest.mark.parametrize("param_for_json, new_value",
                              [("name", "The Office"),
@@ -41,7 +41,7 @@ class TestGetSeries:
 
 
 
-    @pytest.mark.series_tests
+    @pytest.mark.api
     @allure.title("Проверка добавления разного количества сериалов: успешные сценарии")
     @pytest.mark.parametrize("create_and_del_series",
                              ["data/my_show_INSERT_3_series.sql", "data/my_show_INSERT_1_series.sql", None],

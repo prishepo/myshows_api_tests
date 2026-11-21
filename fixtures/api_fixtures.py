@@ -15,7 +15,6 @@ conn_params = {
     "port": int(os.getenv("DB_PORT", "5432"))
 }
 
-
 @pytest.fixture(scope="session")
 def api_session():
     with allure.step("Инициализация api session"):
